@@ -1,0 +1,27 @@
+# AI search crawlers and search engines are welcome.
+# While this is a preview, index.html carries a noindex tag; remove it at launch.
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: Claude-SearchBot
+Allow: /
+
+User-agent: Claude-User
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: *
+Allow: /
+
+Sitemap: https://sundaysbloodymary.com/sitemap.xml
