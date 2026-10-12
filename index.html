@@ -338,6 +338,7 @@ input{caret-color:var(--gold)}
 .typepick button{padding:.7em .9em;border-radius:999px;min-height:36px}
 .typepick button[aria-pressed="true"]{background:var(--navy);color:var(--paper)}
 @media(max-width:860px){.typepick{bottom:calc(76px + env(safe-area-inset-bottom,0px))}.typepick span{display:none}}
+.bundle .was{font:500 1.125rem/1 var(--body);text-decoration:line-through;opacity:.7;font-variant-numeric:tabular-nums}
 </style>
 </head>
 <body>
@@ -394,9 +395,9 @@ input{caret-color:var(--gold)}
   </div>
 
   <div class="bundle">
-    <div><h3 class="d">The Full Sunday: all three jars <em>and the glass.</em></h3>
-      <p>Can't choose? Don't. One Spicy, one Traditional, one Mild, plus the Sunday's glass to pour them into. Three jars alone land $2.03 short of free shipping. The glass fixes that.</p></div>
-    <div class="side"><span class="big">$57.96</span><span class="label">Ships free<span class="ph">Proposed bundle</span></span><button class="btn btn-gold" data-add="set">Add the set</button></div>
+    <div><h3 class="d">The Full <em>Sunday.</em></h3>
+      <p>Can't decide? Make it a GREAT weekend and get all three, a complimentary Sunday's Glass to drink them from and free shipping!</p></div>
+    <div class="side"><span class="was">$57.96</span><span class="big">$47.97</span><span class="label">Free glass · Free shipping<span class="ph">Proposed offer</span></span><button class="btn btn-gold" data-add="set">Go Wild! Get all 3!</button></div>
   </div>
 
   <div class="facts">
@@ -471,7 +472,7 @@ input{caret-color:var(--gold)}
 </div></footer>
 
 <div class="typepick" id="typepick" role="group" aria-label="Typeface preview (review tool)"><span>Type</span><button data-type="label">Label</button><button data-type="classic">Classic</button><button data-type="modern">Modern</button><button data-type="bodoni">Bodoni</button></div>
-<div class="buybar" id="buybar"><span><b>The Full Sunday</b>3 jars + the glass · ships free</span><button class="btn btn-gold" data-add="set">Add · $57.96</button></div>
+<div class="buybar" id="buybar"><span><b>The Full Sunday</b>3 jars, free glass, free shipping</span><button class="btn btn-gold" data-add="set">Get all 3 · $47.97</button></div>
 <div class="scrim" id="scrim"></div>
 <aside class="drawer" id="drawer" role="dialog" aria-label="Your cart" aria-hidden="true">
   <header><h2 class="d">Your cart</h2><button id="cart-close" class="btn btn-line" style="padding:.5em 1em">Close</button></header>
@@ -488,15 +489,15 @@ const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /* ---------- cart (in-memory demo; swap for Shopify Storefront / cart API) ---------- */
-const P={spicy:['Spicy','32 oz jar',15.99],trad:['Traditional','32 oz jar',15.99],mild:['Mild','32 oz jar',15.99],glass:["Sunday's glass",'Beer glass',9.99],box:['Monthly box','Billed monthly',38.97]};
+const P={spicy:['Spicy','32 oz jar',15.99],trad:['Traditional','32 oz jar',15.99],mild:['Mild','32 oz jar',15.99],glass:["Sunday's glass",'Beer glass',9.99],gift:["Sunday's glass",'Complimentary with The Full Sunday',0],box:['Monthly box','Billed monthly',38.97]};
 const cart={}, FREE=50, money=n=>'$'+n.toFixed(2);
-function add(id,n=1){cart[id]=(cart[id]||0)+n;if(cart[id]<=0)delete cart[id];draw()}
-function draw(){
+function add(id,n=1){if(id==='gift'&&n>0)return;cart[id]=(cart[id]||0)+n;if(cart[id]<=0)delete cart[id];draw()}
+function draw(){const setIn=()=>cart.spicy&&cart.trad&&cart.mild;if(cart.gift&&!setIn())delete cart.gift;
   const ids=Object.keys(cart), sub=ids.reduce((s,i)=>s+P[i][2]*cart[i],0), count=ids.reduce((s,i)=>s+cart[i],0);
   $('#cart-count').textContent=count; $('#subtotal').textContent=money(sub);
   $('#lines').innerHTML=ids.length?ids.map(i=>`<div class="line"><div><b>${P[i][0]}</b><br><small>${P[i][1]}</small></div><span class="amt">${money(P[i][2]*cart[i])}</span><div class="qty"><button data-q="${i}" data-d="-1" aria-label="Remove one ${P[i][0]}">−</button><span>${cart[i]}</span><button data-q="${i}" data-d="1" aria-label="Add one ${P[i][0]}">+</button></div></div>`).join(''):'<p class="empty">Nothing here yet. Sunday is going to be rough.</p>';
-  const left=FREE-sub, bar=$('#ship-bar'), nudge=$('#nudge');
-  bar.style.transform=`scaleX(${Math.min(1,sub/FREE)})`; bar.classList.toggle('full',left<=0);
+  const left=cart.gift?0:FREE-sub, bar=$('#ship-bar'), nudge=$('#nudge');
+  bar.style.transform=`scaleX(${cart.gift?1:Math.min(1,sub/FREE)})`; bar.classList.toggle('full',left<=0);
   $('#ship-msg').textContent=left<=0?'You\'ve got free shipping.':sub?`${money(left)} away from free shipping`:'Free shipping on orders of $50 or more';
   const up=left>0&&sub>0?(!cart.glass&&left<=9.99?'glass':'spicy'):null;
   nudge.hidden=!up; if(up){nudge.dataset.add=up;nudge.textContent=up==='glass'?"Add the Sunday's glass for $9.99 and ship free":'Add another jar of Spicy, $15.99'}
@@ -504,7 +505,7 @@ function draw(){
 function openCart(o){document.body.classList.toggle('cart-open',o);$('#drawer').setAttribute('aria-hidden',!o);if(o)$('#cart-close').focus()}
 document.addEventListener('click',e=>{
   const a=e.target.closest('[data-add]'), q=e.target.closest('[data-q]');
-  if(a){const id=a.dataset.add; id==='set'?['spicy','trad','mild','glass'].forEach(i=>{cart[i]=(cart[i]||0)+1}):0; id==='set'?draw():add(id); openCart(true)}
+  if(a){const id=a.dataset.add; id==='set'?(['spicy','trad','mild'].forEach(i=>{cart[i]=(cart[i]||0)+1}),cart.gift=1):0; id==='set'?draw():add(id); openCart(true)}
   if(q)add(q.dataset.q,+q.dataset.d);
 });
 $('#cart-open').onclick=()=>openCart(true); $('#cart-close').onclick=$('#scrim').onclick=()=>openCart(false);

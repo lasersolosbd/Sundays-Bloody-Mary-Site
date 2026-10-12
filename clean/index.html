@@ -185,6 +185,18 @@ details p{padding-bottom:1.3rem;color:var(--ink2);max-width:62ch}
 .tot{display:flex;justify-content:space-between;font-weight:600;font-size:1.125rem;font-variant-numeric:tabular-nums}
 .demo{font-size:.8125rem;color:var(--ink2)}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.hero>*{animation:none}.drawer,.step{transition-duration:1ms}}
+/* The Full Sunday: an offer tile in the brand marigold, price set apart from the pitch */
+.set{background:var(--film);color:var(--navy);border-radius:28px;padding:clamp(2rem,5vw,4rem);text-align:left;display:grid;grid-template-columns:1.25fr .75fr;gap:2rem clamp(2rem,5vw,4.5rem);align-items:center}
+.set .lead{margin:1rem 0 0;max-width:30ch;color:var(--navy)}
+.deal{background:#fff;border-radius:22px;padding:clamp(1.5rem,3vw,2.25rem);display:grid;gap:1.1rem;color:var(--ink)}
+.deal .now{display:flex;align-items:baseline;gap:.75rem}
+.deal .now b{font-size:clamp(2.75rem,5vw,3.75rem);font-weight:600;letter-spacing:-.035em;line-height:1;font-variant-numeric:tabular-nums}
+.deal .now s{color:var(--ink2);font-size:1.125rem;font-variant-numeric:tabular-nums}
+.deal ul{list-style:none;margin:0;padding:0;display:grid;gap:.45rem;color:var(--ink)}
+.deal li{display:flex;gap:.6rem;align-items:baseline}
+.deal li::before{content:"";flex:none;width:.5em;height:.28em;border-left:2px solid #2e8b3d;border-bottom:2px solid #2e8b3d;transform:rotate(-45deg) translateY(-.2em)}
+.deal .btn{width:100%;font-size:1.125rem;font-weight:600;min-height:54px}
+@media(max-width:860px){.set{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -236,9 +248,13 @@ details p{padding-bottom:1.3rem;color:var(--ink2);max-width:62ch}
       <div class="buy"><span class="price">$15.99<small>about $2 a drink</small></span><button class="btn" data-add="spicy">Add to cart</button></div></div></article>
   </div>
   <div class="set">
-    <h2>The Full Sunday.</h2>
-    <p class="lead">All three flavors and the Sunday's glass. <b>$57.96, and it ships free.</b></p>
-    <div class="cta"><button class="btn light" data-add="set">Add the set</button></div>
+    <div class="pitch"><h2>The Full Sunday.</h2>
+      <p class="lead">Can't decide? Make it a GREAT weekend and get all three, a complimentary Sunday's Glass to drink them from and free shipping!</p></div>
+    <div class="deal">
+      <p class="now"><s>$57.96</s><b>$47.97</b></p>
+      <ul><li>Spicy, Traditional and Mild</li><li>Sunday's Glass, on us</li><li>Free shipping</li></ul>
+      <button class="btn" data-add="set">Go Wild! Get all 3!</button>
+    </div>
   </div>
   <p class="terms small">Free shipping on orders of $50 or more. Shop Pay, Apple Pay, PayPal and cards accepted.</p>
 </div></section>
@@ -300,15 +316,15 @@ const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /* ---------- cart (in-memory demo; swap for Shopify Storefront / cart API) ---------- */
-const P={spicy:['Spicy','32 oz jar',15.99],trad:['Traditional','32 oz jar',15.99],mild:['Mild','32 oz jar',15.99],glass:["Sunday's glass",'Beer glass',9.99],box:['Monthly box','Billed monthly',38.97]};
+const P={spicy:['Spicy','32 oz jar',15.99],trad:['Traditional','32 oz jar',15.99],mild:['Mild','32 oz jar',15.99],glass:["Sunday's glass",'Beer glass',9.99],gift:["Sunday's glass",'Complimentary with The Full Sunday',0],box:['Monthly box','Billed monthly',38.97]};
 const cart={}, FREE=50, money=n=>'$'+n.toFixed(2);
-function add(id,n=1){cart[id]=(cart[id]||0)+n;if(cart[id]<=0)delete cart[id];draw()}
-function draw(){
+function add(id,n=1){if(id==='gift'&&n>0)return;cart[id]=(cart[id]||0)+n;if(cart[id]<=0)delete cart[id];draw()}
+function draw(){const setIn=()=>cart.spicy&&cart.trad&&cart.mild;if(cart.gift&&!setIn())delete cart.gift;
   const ids=Object.keys(cart), sub=ids.reduce((s,i)=>s+P[i][2]*cart[i],0), count=ids.reduce((s,i)=>s+cart[i],0);
   $('#cart-count').textContent=count; $('#subtotal').textContent=money(sub);
   $('#lines').innerHTML=ids.length?ids.map(i=>`<div class="line"><div><b>${P[i][0]}</b><br><small>${P[i][1]}</small></div><span class="amt">${money(P[i][2]*cart[i])}</span><div class="qty"><button data-q="${i}" data-d="-1" aria-label="Remove one ${P[i][0]}">−</button><span>${cart[i]}</span><button data-q="${i}" data-d="1" aria-label="Add one ${P[i][0]}">+</button></div></div>`).join(''):'<p class="empty">Nothing here yet. Sunday is going to be rough.</p>';
-  const left=FREE-sub, bar=$('#ship-bar'), nudge=$('#nudge');
-  bar.style.transform=`scaleX(${Math.min(1,sub/FREE)})`; bar.classList.toggle('full',left<=0);
+  const left=cart.gift?0:FREE-sub, bar=$('#ship-bar'), nudge=$('#nudge');
+  bar.style.transform=`scaleX(${cart.gift?1:Math.min(1,sub/FREE)})`; bar.classList.toggle('full',left<=0);
   $('#ship-msg').textContent=left<=0?'You\'ve got free shipping.':sub?`${money(left)} away from free shipping`:'Free shipping on orders of $50 or more';
   const up=left>0&&sub>0?(!cart.glass&&left<=9.99?'glass':'spicy'):null;
   nudge.hidden=!up; if(up){nudge.dataset.add=up;nudge.textContent=up==='glass'?"Add the Sunday's glass for $9.99 and ship free":'Add another jar of Spicy, $15.99'}
@@ -316,7 +332,7 @@ function draw(){
 function openCart(o){document.body.classList.toggle('cart-open',o);$('#drawer').setAttribute('aria-hidden',!o);if(o)$('#cart-close').focus()}
 document.addEventListener('click',e=>{
   const a=e.target.closest('[data-add]'), q=e.target.closest('[data-q]');
-  if(a){const id=a.dataset.add; id==='set'?['spicy','trad','mild','glass'].forEach(i=>{cart[i]=(cart[i]||0)+1}):0; id==='set'?draw():add(id); openCart(true)}
+  if(a){const id=a.dataset.add; id==='set'?(['spicy','trad','mild'].forEach(i=>{cart[i]=(cart[i]||0)+1}),cart.gift=1):0; id==='set'?draw():add(id); openCart(true)}
   if(q)add(q.dataset.q,+q.dataset.d);
 });
 $('#cart-open').onclick=()=>openCart(true); $('#cart-close').onclick=$('#scrim').onclick=()=>openCart(false);
